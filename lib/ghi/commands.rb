@@ -19,5 +19,6 @@ module GHI
 		autoload :Status,    'ghi/commands/status'
     autoload :Unassign,  'ghi/commands/unassign'
     autoload :Version,   'ghi/commands/version'
+    autoload :Find,      'ghi/commands/find'
   end
 end
