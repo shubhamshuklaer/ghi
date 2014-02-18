@@ -509,7 +509,7 @@ EOF
       return '' unless arr.any?
       last_element = arr.pop
       if arr.any?
-        arr.join(', ') << ' and #{last_element}'
+        arr.join(', ') << " and #{last_element}"
       else
         last_element
       end
