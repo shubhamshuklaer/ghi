@@ -25,6 +25,7 @@ task :build do
     lib/ghi/commands/open.rb
     lib/ghi/commands/show.rb
     lib/ghi/commands/status.rb
+    lib/ghi/commands/find.rb
     bin/ghi
   )
   files = FileList[*manifest]
