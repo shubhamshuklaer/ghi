@@ -122,6 +122,15 @@ module GHI
       state = assigns[:state] ||= 'open'
       org = assigns[:org] ||= nil
       header = "# #{repo || org || 'Global,'} #{state} issues"
+
+      if keywords = params[:q]
+        # keywords are a string delimited by a space
+        kw = keywords.split.map { |word| "'#{word}'" }
+        pl = kw.size > 1 ? 's' : ''
+        kw_string = format_list(kw)
+        header << " with the keyword#{pl} #{kw_string}"
+      end
+
       if repo
         if milestone = params[:milestone]
           case milestone
@@ -130,13 +139,6 @@ module GHI
           else
             header.sub! repo, "#{repo} milestone ##{milestone}"
           end
-        end
-        if keywords = params[:q]
-          # keywords are a string delimited by a space
-          kw = keywords.split.map { |word| "'#{word}'" }
-          pl = kw.size > 1 ? 's' : ''
-          kw_string = format_list(kw)
-          header << " with the keyword#{pl} #{kw_string}"
         end
         if assignee = params[:assignee]
           header << case assignee
