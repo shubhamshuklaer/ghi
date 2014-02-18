@@ -133,6 +133,10 @@ GitHub repository or by appending your command with the user/repo:
       def sort_by_creation(arr)
         arr.sort_by { |el| el['created_at'] }
       end
+
+      def find_mode?
+        false
+      end
     end
   end
 end
