@@ -548,8 +548,7 @@ EOF
       org = assigns[:org] ||= nil
       header = "# #{repo || org || 'Global,'} #{state} issues"
       if (user = assigns[:user]) && find_mode?
-        user = 'you' if user == Authorization.username
-        "# #{state.capitalize} issues in repos of #{user}"
+        "# #{state.capitalize} issues in repos of #{format_username(user)}"
       else
         "# #{repo || 'Global,'} #{state} issues"
       end
