@@ -74,8 +74,8 @@ module GHI
       end
         
       def detect_repo
-        remote   = remotes.find { |r| r[:remote] == 'upstream' }
-        remote ||= remotes.find { |r| r[:remote] == 'origin' }
+        remote   = upstream
+        remote ||= origin
         remote ||= remotes.find { |r| r[:user]   == Authorization.username }
         Command.detected_repo = true and remote[:repo] if remote
       end
@@ -110,6 +110,19 @@ module GHI
       def infer_issue_from_branch_prefix
         @issue = `git symbolic-ref --short HEAD 2>/dev/null`[/^\d+/];
         warn "(Inferring issue from branch prefix: ##@issue)" if @issue
+      end
+
+      def current_branch
+        `git symbolic-ref --short HEAD 2>/dev/null`.chomp
+      end
+
+      def origin
+        remotes.find { |r| r[:remote] == 'origin' }
+      end
+
+      def upstream
+        remotes.find { |r| r[:remote] == 'upstream' }
+        Extract current_branch, upstream and origin
       end
 
       def require_issue
