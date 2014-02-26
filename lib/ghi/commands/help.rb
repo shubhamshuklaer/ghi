@@ -40,6 +40,7 @@ The most commonly used ghi commands are:
    disable     Disable issues for the current repo
 
 See 'ghi help <command>' for more information on a specific command.
+Type 'ghi aliases' to see a list of aliases you can use to save some typing.
 EOF
           exit
         end
