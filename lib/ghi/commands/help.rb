@@ -38,6 +38,7 @@ The most commonly used ghi commands are:
    status      Determine whether or not issues are enabled for this repo
    enable      Enable issues for the current repo
    disable     Disable issues for the current repo
+   pull        Manage your pull requests
 
 See 'ghi help <command>' for more information on a specific command.
 Type 'ghi aliases' to see a list of aliases you can use to save some typing.
