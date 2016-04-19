@@ -1597,7 +1597,7 @@ module GHI
           # we need the index - 1
           # The position is also zero based - count - 1 sets this right.
           comment['position'] = diff[0..index - 2].lines.count - 1
-          if diff.sub!(/^@\n(.*?)^@\n/m) { comment['body'] = $1.strip; '' }
+          if diff.sub!(/^@\n(.*?)^@$/m) { comment['body'] = $1.strip; '' }
             result << comment
           else
             raise "Invalid comment format present!"
