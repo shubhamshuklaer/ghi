@@ -122,7 +122,6 @@ module GHI
 
       def upstream
         remotes.find { |r| r[:remote] == 'upstream' }
-        Extract current_branch, upstream and origin
       end
 
       def require_issue
