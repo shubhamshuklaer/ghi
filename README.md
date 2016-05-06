@@ -71,3 +71,9 @@ FAQs can be found in the [wiki](https://github.com/stephencelis/ghi/wiki/FAQ)
 ## Screenshot
 
 ![Example](images/example.png)
+
+## Travis CI
+* Install travis `gem install travis`
+* Use fake account for user and pass for security reasons
+* `travis encrypt GITHUB_PASSWORD=github_pass --add env.global`
+* `travis encrypt GITHUB_PASSWORD=github_user --add env.global`
