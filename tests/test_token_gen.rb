@@ -2,7 +2,7 @@ require "test/unit"
 require "helper"
 require "pp"
 
-class Token_gen < Test::Unit::TestCase
+class Test_1_token_gen < Test::Unit::TestCase
 
   def test_generate_token
      `#{ghi_exec} config --auth --quiet`
