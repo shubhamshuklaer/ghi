@@ -72,8 +72,17 @@ FAQs can be found in the [wiki](https://github.com/stephencelis/ghi/wiki/FAQ)
 
 ![Example](images/example.png)
 
-## Travis CI
-* Install travis `gem install travis`
-* Use fake account for user and pass for security reasons
-* `travis encrypt GITHUB_PASSWORD=github_pass --add env.global`
-* `travis encrypt GITHUB_PASSWORD=github_user --add env.global`
+## Enable Travis CI in fork
+
+* Open a Travis CI account and activate travis-ci for the fork
+* Create a fake github account for testing. The username, password and token
+will be available to the tests and if by mistake(or otherwise) the test prints
+it, it will be available in public log. So its best to create a fake account
+and use a password you are not using for anything else. Also apart from
+security reasons, bugs in tests or software can mess up you original user
+account, to to be on safe side use a fake account.
+* In Travis-CI on settings page for the repo add environment variables
+GITHUB\_USER and GITHUB\_PASSWORD. Ensure that the "Display value in build log"
+is set to false. It is possible to add these in ".travis.yml", but don't as all
+forks as well as original repo will be using different accounts for testing, so
+it will cause problems during merge.
