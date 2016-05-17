@@ -145,6 +145,7 @@ EOF
       'claim'    => %w(assign),
       'create'   => %w(open),
       'e'        => %w(edit),
+      'f'        => %w{find},
       'l'        => %w(list),
       'L'        => %w(label),
       'm'        => %w(comment),
@@ -661,12 +662,24 @@ module GHI
       username == Authorization.username ? 'you' : username
     end
 
-    def format_issues_header
+    def format_issues_header(params = assigns)
       state = assigns[:state] ||= 'open'
-      org = assigns[:org] ||= nil
-      header = "# #{repo || org || 'Global,'} #{state} issues"
-      if repo
-        if milestone = assigns[:milestone]
+      header = header_start(params)
+
+      if keywords = params[:q]
+        # keywords are a string delimited by a space
+        kw = keywords.split.map { |word| "'#{word}'" }
+        pl = kw.size > 1 ? 's' : ''
+        kw_string = format_list(kw)
+        header << " with the keyword#{pl} #{kw_string}"
+      end
+
+      if repo || find_mode?
+        if fields = params[:in]
+          splitted = fields.split(',')
+          header << " in a #{format_list(splitted, 'or')}"
+        end
+        if milestone = params[:milestone]
           case milestone
             when '*'    then header << ' with a milestone'
             when 'none' then header << ' without a milestone'
@@ -674,7 +687,7 @@ module GHI
             header.sub! repo, "#{repo} milestone ##{milestone}"
           end
         end
-        if assignee = assigns[:assignee]
+        if assignee = params[:assignee]
           header << case assignee
             when '*'    then ', assigned'
             when 'none' then ', unassigned'
@@ -682,11 +695,11 @@ module GHI
             ", assigned to #{format_username assignee}"
           end
         end
-        if mentioned = assigns[:mentioned]
+        if mentioned = params[:mentioned]
           header << ", mentioning #{format_username mentioned}"
         end
       else
-        header << case assigns[:filter]
+        header << case params[:filter]
           when 'created'    then ' you created'
           when 'mentioned'  then ' that mention you'
           when 'subscribed' then " you're subscribed to"
@@ -695,19 +708,19 @@ module GHI
           ' assigned to you'
         end
       end
-      if creator = assigns[:creator]
+      if creator = params[:creator]
         header << " #{format_username creator} created"
       end
-      if labels = assigns[:labels]
+      if labels = params[:labels]
         header << ", labeled #{labels.gsub ',', ', '}"
       end
-      if excluded_labels = assigns[:exclude_labels]
+      if excluded_labels = params[:exclude_labels]
         header << ", excluding those labeled #{excluded_labels.gsub ',', ', '}"
       end
-      if sort = assigns[:sort]
+      if sort = params[:sort]
         header << ", by #{sort} #{reverse ? 'ascending' : 'descending'}"
       end
-      format_state assigns[:state], header
+      format_state params[:state], header
     end
 
     def format_issues issues, include_repo
@@ -1038,6 +1051,17 @@ EOF
       [string, ago].compact.join ' '
     end
 
+    # %w{ a b c } to "a, b, and c"
+    def format_list(arr, ending_coordination = 'and')
+      return '' unless arr.any?
+      last_element = arr.pop
+      if arr.any?
+        arr.join(', ') << " #{ending_coordination} #{last_element}"
+      else
+        last_element
+      end
+    end
+
     def throb position = 0, redraw = CURSOR[:up][1]
       return yield unless paginate?
 
@@ -1065,6 +1089,17 @@ EOF
 
     def unimportant_event?(event)
       %w{ subscribed unsubscribed mentioned }.include?(event)
+    end
+
+    def header_start(params)
+      state = params[:state] ||= 'open'
+      org = assigns[:org]
+      header = "# #{repo || org || 'Global,'} #{state} issues"
+      if (user = assigns[:user]) && find_mode?
+        "# #{state.capitalize} issues in repos of #{format_username(user)}"
+      else
+        "# #{repo || 'Global,'} #{state} issues"
+      end
     end
   end
 end
@@ -1309,7 +1344,9 @@ module GHI
     def request method, path, options
       path = "/api/v3#{path}" if HOST != DEFAULT_HOST
 
-      path = URI.escape path
+      # There's no way of knowing if path is already an encoded string at this
+      # point, to be safe we try to decode it before encoding it again.
+      path = URI.encode(URI.decode(path))
       if params = options[:params] and !params.empty?
         q = params.map { |k, v| "#{CGI.escape k.to_s}=#{CGI.escape v.to_s}" }
         path += "?#{q.join '&'}"
@@ -1592,6 +1629,10 @@ GitHub repository or by appending your command with the user/repo:
 
       def sort_by_creation(arr)
         arr.sort_by { |el| el['created_at'] }
+      end
+
+      def find_mode?
+        false
       end
     end
   end
@@ -2177,6 +2218,7 @@ The most commonly used ghi commands are:
    status      Determine whether or not issues are enabled for this repo
    enable      Enable issues for the current repo
    disable     Disable issues for the current repo
+   find        Search for issues by keywords
 
 See 'ghi help <command>' for more information on a specific command.
 EOF
@@ -2413,57 +2455,20 @@ module GHI
         OptionParser.new do |opts|
           opts.banner = 'usage: ghi list [options]'
           opts.separator ''
-          opts.on '-g', '--global', 'all of your issues on GitHub' do
-            assigns[:filter] = 'all'
-            @repo = nil
-          end
-          opts.on(
-            '-s', '--state <in>', %w(open closed),
-            {'o'=>'open', 'c'=>'closed'}, "'open' or 'closed'"
-          ) do |state|
-            assigns[:state] = state
-          end
-          opts.on(
-            '-L', '--label <labelname>...', Array, 'by label(s)'
-          ) do |labels|
-            (assigns[:labels] ||= []).concat labels
-          end
-          opts.on(
-            '-N', '--not-label <labelname>...', Array, 'exclude with label(s)'
-          ) do |labels|
-            (assigns[:exclude_labels] ||= []).concat labels
-          end
-          opts.on(
-            '--no-labels', 'do not print labels'
-          ) do
-            assigns[:dont_print_labels] = true
-          end
-          opts.on(
-            '-S', '--sort <by>', %w(created updated comments),
-            {'c'=>'created','u'=>'updated','m'=>'comments'},
-            "'created', 'updated', or 'comments'"
-          ) do |sort|
-            assigns[:sort] = sort
-          end
-          opts.on '--reverse', 'reverse (ascending) sort order' do
-            self.reverse = !reverse
-          end
-          opts.on('-p', '--pulls','list only pull requests') { self.pull_requests_only = true }
-          opts.on('-P', '--no-pulls','exclude pull requests') { self.exclude_pull_requests = true }
-          opts.on(
-            '--since <date>', 'issues more recent than',
-            "e.g., '2011-04-30'"
-          ) do |date|
-            begin
-              assigns[:since] = DateTime.parse date # TODO: Better parsing.
-            rescue ArgumentError => e
-              raise OptionParser::InvalidArgument, e.message
-            end
-          end
-          opts.on('-v', '--verbose') { self.verbose = true }
-          opts.on('-w', '--web') { self.web = true }
-          opts.separator ''
-          opts.separator 'Global options'
+
+          extract_globality(opts)
+          extract_state(opts)
+          extract_label_inclusion(opts)
+          extract_label_exclusion(opts)
+          extract_dont_print_labels(opts)
+          extract_sorting(opts)
+          extract_pull_request(opts)
+          extract_dating(opts)
+          extract_verbosity(opts)
+          extract_web(opts)
+
+          add_section_header(opts, 'Global')
+
           opts.on(
             '-f', '--filter <by>',
             filters = %w[all assigned created mentioned subscribed],
@@ -2472,12 +2477,9 @@ module GHI
           ) do |filter|
             assigns[:filter] = filter
           end
-          opts.on '--mine', 'assigned to you' do
-            assigns[:filter] = 'assigned'
-            assigns[:assignee] = Authorization.username
-          end
-          opts.separator ''
-          opts.separator 'Project options'
+
+          add_section_header(opts, 'Project')
+
           opts.on(
             '-M', '--[no-]milestone [<n>]', Integer,
             'with (specified) milestone'
@@ -2485,32 +2487,15 @@ module GHI
             assigns[:milestone] = any_or_none_or milestone
           end
           opts.on(
-            '-u', '--[no-]assignee [<user>]', 'assigned to specified user'
-          ) do |assignee|
-            assignee = assignee.sub /^@/, '' if assignee
-            assigns[:assignee] = any_or_none_or assignee
-          end
-          opts.on '--mine', 'assigned to you' do
-            assigns[:filter] = 'assigned'
-            assigns[:assignee] = Authorization.username
-          end
-          opts.on(
-            '--creator [<user>]', 'created by you or specified user'
-          ) do |creator|
-            creator = creator.sub /^@/, '' if creator
-            assigns[:creator] = creator || Authorization.username
-          end
-          opts.on(
-            '-U', '--mentioned [<user>]', 'mentioning you or specified user'
-          ) do |mentioned|
-            assigns[:mentioned] = mentioned || Authorization.username
-          end
-          opts.on(
             '-O', '--org <organization>', 'in repos within an organization you belong to'
           ) do |org|
 	    assigns[:org] = org
             @repo = nil
           end
+          extract_assignee(opts)
+          extract_assigment_to_you(opts)
+          extract_creator(opts)
+          extract_mentioned(opts)
           opts.separator ''
         end
       end
@@ -2554,18 +2539,11 @@ module GHI
               prs, issues = issues.partition { |i| i.key?('pull_request') }
               issues = prs if pull_requests_only
             end
-            if assigns[:exclude_labels]
-              issues = issues.reject  do |i|
-                i["labels"].any? do |label|
-                  assigns[:exclude_labels].include? label["name"]
-                end
-              end
-            end
-            if verbose
-              puts issues.map { |i| format_issue i }
-            else
-              puts format_issues(issues, repo.nil?)
-            end
+
+            issues = issues_without_excluded_labels(issues, assigns[:exclude_labels])
+
+            put_issues(issues)
+
             break unless res.next_page
             res = throb { api.get res.next_page }
           end
@@ -2597,6 +2575,140 @@ module GHI
         OptionParser.new do |opts|
           opts.on('-c', '--closed') { assigns[:state] = 'closed' }
           opts.on('-q', '--quiet')  { self.quiet = true }
+        end
+      end
+
+      def extract_globality(opts)
+        opts.on '-a', '--global', '--all', 'all of your issues on GitHub' do
+          assigns[:filter] = 'all'
+          @repo = nil
+        end
+      end
+
+      def extract_state(opts)
+        opts.on(
+          '-s', '--state <in>', %w(open closed),
+          {'o'=>'open', 'c'=>'closed'}, "'open' or 'closed'"
+        ) do |state|
+          assigns[:state] = state
+        end
+      end
+
+      def extract_label_inclusion(opts)
+        opts.on(
+          '-L', '--label <labelname>...', Array, 'by label(s)'
+        ) do |labels|
+          (assigns[:labels] ||= []).concat labels
+        end
+      end
+
+      def extract_label_exclusion(opts)
+        opts.on(
+          '-N', '--not-label <labelname>...', Array, 'exclude with label(s)'
+        ) do |labels|
+          (assigns[:exclude_labels] ||= []).concat labels
+        end
+      end
+
+      def extract_dont_print_labels(opts)
+        opts.on(
+          '--no-labels', 'do not print labels'
+        ) do
+          assigns[:dont_print_labels] = true
+        end
+      end
+
+      def extract_sorting(opts)
+        opts.on(
+          '-S', '--sort <by>', %w(created updated comments),
+          {'c'=>'created','u'=>'updated','m'=>'comments'},
+          "'created', 'updated', or 'comments'"
+        ) do |sort|
+          assigns[:sort] = sort
+        end
+        opts.on '--reverse', 'reverse (ascending) sort order' do
+          self.reverse = !reverse
+        end
+      end
+
+      def extract_pull_request(opts)
+        opts.on('-p', '--pulls','list only pull requests') { self.pull_requests_only = true }
+        opts.on('-P', '--no-pulls','exclude pull requests') { self.exclude_pull_requests = true }
+      end
+
+      def extract_dating(opts)
+        opts.on(
+          '--since <date>', 'issues more recent than',
+          "e.g., '2011-04-30'"
+        ) do |date|
+          begin
+            assigns[:since] = DateTime.parse date # TODO: Better parsing.
+          rescue ArgumentError => e
+            raise OptionParser::InvalidArgument, e.message
+          end
+        end
+      end
+
+      def extract_verbosity(opts)
+        opts.on('-v', '--verbose') { self.verbose = true }
+      end
+
+      def extract_web(opts)
+        opts.on('-w', '--web') { self.web = true }
+      end
+
+      def extract_assignee(opts)
+        opts.on(
+          '-u', '--[no-]assignee [<user>]', 'assigned to specified user'
+        ) do |assignee|
+          assignee = assignee.sub /^@/, '' if assignee
+          assigns[:assignee] = any_or_none_or assignee
+        end
+      end
+
+      def extract_assigment_to_you(opts)
+        opts.on '--mine', 'assigned to you' do
+          assigns[:filter] = 'assigned'
+          assigns[:assignee] = Authorization.username
+        end
+      end
+
+      def extract_creator(opts)
+        opts.on(
+          '--creator [<user>]', 'created by you or specified user'
+        ) do |creator|
+          creator = creator.sub /^@/, '' if creator
+          assigns[:creator] = creator || Authorization.username
+        end
+      end
+
+      def extract_mentioned(opts)
+        opts.on(
+          '-U', '--mentioned [<user>]', 'mentioning you or specified user'
+        ) do |mentioned|
+          assigns[:mentioned] = mentioned || Authorization.username
+        end
+      end
+
+      def issues_without_excluded_labels(issues, exclusions)
+        return issues unless exclusions
+        issues.reject  do |i|
+          i["labels"].any? do |label|
+            exclusions.include? label["name"]
+          end
+        end
+      end
+
+      def add_section_header(opts, name)
+        opts.separator ''
+        opts.separator "#{name} options"
+      end
+
+      def put_issues(issues)
+        if verbose
+          puts issues.map { |i| format_issue i }
+        else
+          puts format_issues(issues, repo.nil?)
         end
       end
     end
@@ -3003,6 +3115,222 @@ module GHI
           puts "Issues are not enabled for this repo"
         end
 
+      end
+    end
+  end
+end
+module GHI
+  module Commands
+    # Allows looking up issues by keywords.
+    #
+    # Makes use of github's Search API: http://developer.github.com/v3/search/#search-issues
+    class Find < List
+      def options
+        OptionParser.new do |opts|
+          opts.banner = 'usage: ghi find <keyword(s)> [options]'
+          opts.separator ''
+
+          extract_globality(opts)
+          extract_state(opts)
+          extract_label_inclusion(opts)
+          extract_label_exclusion(opts)
+          extract_pull_request(opts)
+          extract_fields(opts)
+
+          opts.separator ''
+
+          extract_assignee(opts)
+          extract_assigment_to_you(opts)
+          extract_creator(opts)
+          extract_mentioned(opts)
+          extract_user_bound_search(opts)
+
+          opts.separator ''
+
+          extract_verbosity(opts)
+          extract_quiteness(opts)
+        end
+      end
+
+      def execute
+        # because of the keyword extraction we cannot let the OptionParser
+        # handle requests for the help screen
+        detect_help_request
+        extract_keywords
+        options.parse!(args)
+
+        # TODO pagination. Is it broken in the search API?
+
+        assigns[:per_page] = 100
+        assigns[:repo] = repo if repo
+        assigns[:state] ||= 'open'
+
+        unless assigns[:org]
+          assigns.delete(:org)
+        end
+
+        unless quiet
+          print header = format_issues_header(prepared_format_params)
+          print "\n" unless paginate?
+        end
+
+        # some preparations to handle the differences in the API's of the
+        # issues (used by List) and search (used by Find)
+        assigns.delete(:filter) # defined by List, we don't need it
+        handle_pull_request_options
+        extract_after_filters
+        fix_key_names
+
+        morph_params_to_qualifiers
+
+        res = throb(
+          0, format_state(assigns[:state], quiet ? CURSOR[:up][1] : '#')
+        ) { api.get uri, assigns }
+
+        print "\r#{CURSOR[:up][1]}" if header && paginate?
+
+        page header do
+          issues = res.body['items']
+
+          issues = issues_without_excluded_labels(issues, after_filters[:exclude_labels])
+
+          put_issues(issues)
+
+          break unless res.next_page
+          res = throb { api.get res.next_page }
+        end
+      end
+
+      private
+
+
+      def extract_keywords
+        keywords = []
+        keywords << args.shift until args.empty? || args.first.start_with?('-')
+        abort "No keyword(s) given.\n#{options}" if keywords.empty?
+
+        assigns[:q] = keywords.join(' ')
+      end
+
+      def detect_help_request
+        if args.any? && args.first.match(/^-?-h(elp)?$/)
+          abort options.to_s
+        end
+      end
+
+      # after filters are filters that aren't supported by the Search API and
+      # will be processed after the API request has been made
+      def after_filters
+        @after_filters ||= {}
+      end
+
+      def extract_after_filters
+        [:exclude_labels].each do |f|
+          filter = assigns.delete(f)
+          after_filters[f] = filter if filter
+        end
+      end
+
+      def handle_pull_request_options
+        str = case
+              when exclude_pull_requests then 'issue'
+              when pull_requests_only    then 'pr'
+              else return
+              end
+
+        assigns[:type] = str
+      end
+
+      # The following methods provide additional option extractions unique
+      # to the Search API
+      def extract_fields(opts)
+        opts.on('-f', '--fields <fields>...', Array,
+                'specifies fields to search in: title, body and/or comment') do |fields|
+          assigns[:in] = fields
+        end
+      end
+
+      def extract_quiteness(opts)
+        opts.on('-q', '--quiet') { self.quiet = true }
+      end
+
+      def extract_user_bound_search(opts)
+        opts.on('--repos-of <user>', 'search in all repos of a user') do |user|
+          @repo = nil
+          assigns[:user] = user
+        end
+        opts.on('--my-repos', 'search in all of your repos') do
+          @repo = nil
+          assigns[:user] = Authorization.username
+        end
+      end
+
+
+      def morph_params_to_qualifiers
+        # labels need different handling due to the qualifier syntax
+        labels = assigns.delete(:labels)
+        params = [:q, :sort, :order, :per_page]
+        # this should be safe to do, because :q is always the first element in assigns
+        copy = assigns.dup
+        assigns.clear
+        copy.each do |k, v|
+          if params.include?(k)
+            assigns[k] = v
+          else
+            assigns[:q] << to_qualifier(k, v)
+          end
+        end
+        add_labels(labels)
+      end
+
+      def add_labels(labels)
+        if labels
+          labels.each do |label|
+            assigns[:q] << to_qualifier(:label, label)
+          end
+        end
+      end
+
+      def to_qualifier(qualifier, value)
+        v = value.kind_of?(Array) ? value.join(',') : value
+        " #{qualifier}:#{v}"
+      end
+
+      # This is a little ugly but is needed to fulfill the contract
+      # of Formatting#format_issues_header.
+      # It might be in order to refactor the handling of Arrays in List
+      # to avoid this.
+      def prepared_format_params
+        params = assigns.merge(after_filters).map do |k, v|
+          v = v.join(',') if v.kind_of?(Array)
+          [k, v]
+        end
+        Hash[params]
+      end
+
+      # Some qualifiers/params have different names in github's
+      # APIs for Issues and Search.
+      # We cannot provide the proper values in the initial option extraction
+      # because we want to use the the API of the Formatting module
+      def fix_key_names
+        changes = {
+          creator: :author,
+          mentioned: :mentions,
+        }
+
+        changes.each do |issue_key, search_key|
+          if value = assigns.delete(issue_key)
+            assigns[search_key] = value
+          end
+        end
+      end
+
+      def uri
+        "/search/issues"
+      end
+
+      def find_mode?
+        true
       end
     end
   end

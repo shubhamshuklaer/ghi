@@ -44,6 +44,10 @@ module GHI
         assigns[:repo] = repo if repo
         assigns[:state] ||= 'open'
 
+        unless assigns[:org]
+          assigns.delete(:org)
+        end
+
         unless quiet
           print header = format_issues_header(prepared_format_params)
           print "\n" unless paginate?

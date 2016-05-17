@@ -549,7 +549,7 @@ EOF
 
     def header_start(params)
       state = params[:state] ||= 'open'
-      org = assigns[:org] ||= nil
+      org = assigns[:org]
       header = "# #{repo || org || 'Global,'} #{state} issues"
       if (user = assigns[:user]) && find_mode?
         "# #{state.capitalize} issues in repos of #{format_username(user)}"
