@@ -3,6 +3,7 @@ require "json"
 require "shellwords"
 require "pp"
 require "securerandom"
+require "issues_list"
 
 def append_token headers
     headers.merge(:Authorization=>"token #{get_token}")
@@ -43,10 +44,6 @@ def post path, options ={}
     request(path,:post,options)
 end
 
-def issues
-    JSON.load(File.read('tests/issues.json'))
-end
-
 def ghi_exec
     File.expand_path('../ghi', File.dirname(__FILE__))
 end
@@ -67,4 +64,12 @@ def create_repo
     response_body=JSON.load(response.response_body)
     assert_not_equal(nil,response_body["name"],"Could not create repo #{repo_name}")
     response_body["full_name"]
+end
+
+def get_issue index=0
+    issue=issues[index]
+    issue[:des].gsub!(/\n/,"<br>")
+    # http://stackoverflow.com/questions/12700218/how-do-i-escape-a-single-quote-in-ruby
+    issue[:des].gsub!(/'/){"\\'"}
+    return issue
 end
