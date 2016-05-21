@@ -31,4 +31,15 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
   end
 
+  def test_3_close_issue
+      comment=get_comment 1
+      `#{ghi_exec} close -m "#{comment}" 1 -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1")
+      response_issue=JSON.load(response.body)
+      assert_equal("closed",response_issue["state"],"Issue not closed")
+      response=get("repos/#{@@repo_name}/issues/1/comments")
+      response_body=JSON.load(response.body)
+      assert_equal(comment,response_body[-1]["body"],"Close comment text not proper")
+  end
+
 end
