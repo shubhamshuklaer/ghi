@@ -73,3 +73,7 @@ def get_issue index=0
     issue[:des].gsub!(/'/){"\\'"}
     return issue
 end
+
+def get_comment index=0
+    comments[index]
+end
