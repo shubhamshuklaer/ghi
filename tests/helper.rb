@@ -3,7 +3,7 @@ require "json"
 require "shellwords"
 require "pp"
 require "securerandom"
-require "issues_list"
+require "mock_data"
 
 def append_token headers
     headers.merge(:Authorization=>"token #{get_token}")

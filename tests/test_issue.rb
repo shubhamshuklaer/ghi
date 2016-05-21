@@ -2,9 +2,9 @@ require "test/unit"
 require "helper"
 require "json"
 
-class Test_issue_open < Test::Unit::TestCase
+class Test_issue < Test::Unit::TestCase
 
-  def test_open_issue
+  def test_1_open_issue
       repo_name=create_repo
       issue=get_issue
       `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -- #{repo_name}`
