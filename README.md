@@ -59,8 +59,19 @@ Once you have an idea of what you want to do, there is a section in the [wiki](h
 
 1. Fork this repo
 2. Do your work:
-  1. Make your changes
-  2. Run `rake build`
+  1. Add tests if you are adding new feature or solving some problem which do
+     not have a test.
+  2. Make your changes
+  3. Run `rake build`
+  4. Before running tests GITHUB\_USER and GITHUB\_PASSWORD environment variables
+     must be exported. It will be best to use a fake account as the tests will
+     litter your original repo. Also remove the token for your original repo
+     from ~/.gitconfig or GHI\_TOKEN environment variable.
+  5. Run `rake test` to run the tests
+  6. Run `rake test TEST=tests/file_name.rb` if you want to run a particular
+     test file. Or if you wanna run a single test method use `ruby
+     -I"lib:tests" tests/file_name.rb -n method_name`
+  7. If you don't wanna run the tests locally use travis-ci. See section below.
   3. Make sure your changes work
 3. Open a pull request!
 
