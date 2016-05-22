@@ -57,4 +57,11 @@ class Test_issue < Test::Unit::TestCase
       # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
   end
 
+  def test_5_milestone_add
+      `#{ghi_exec} edit 1 -M 1 -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1")
+      response_issue=JSON.load(response.body)
+      assert_equal(1,response_issue["milestone"]["number"],"Milestone not added to issue")
+  end
+
 end
