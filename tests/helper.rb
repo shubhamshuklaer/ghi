@@ -77,3 +77,7 @@ end
 def get_comment index=0
     comments[index]
 end
+
+def get_milestone index=0
+    milestones[index]
+end

@@ -42,4 +42,19 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(comment,response_body[-1]["body"],"Close comment text not proper")
   end
 
+  def test_4_milestone_create
+      milestone=get_milestone
+      # TODO this is not the correct command for milestone creation, though it
+      # should be for make it consistent with ghi open. In current version you
+      # pass both title and description as argument of -m
+      `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/milestones/1")
+      response_issue=JSON.load(response.body)
+      assert_equal(200,response.code,"Milestone not created")
+      assert_equal(milestone[:title],response_issue["title"],"Title not proper")
+      assert_equal(milestone[:des],response_issue["description"],"Descreption not proper")
+      # TODO test due date due_on format is 2012-04-30T00:00:00Z
+      # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
+  end
+
 end

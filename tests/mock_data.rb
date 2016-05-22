@@ -15,8 +15,18 @@ EOF
 end
 
 def comments
-    [ 
+    [
         "This is first test comment",
         "This is second test comment"
+    ]
+end
+
+def milestones
+    [
+        {
+            title: "Milestone Title",
+            des: "Milestone Discreption",
+            due: "2012-04-30"
+        }
     ]
 end
