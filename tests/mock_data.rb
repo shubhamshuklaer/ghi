@@ -10,6 +10,17 @@ EOF
             assign: "ghitest",
             milestone: "1",
             labels: ["help-wanted", "wontfix", "bug" ]
+        },
+        {
+            title: "Test Issue 1",
+            des: <<EOF,
+This is the second issue. I don't know what to write. This is a critical
+confirmed bug and a feature request at the same time.
+EOF
+
+            assign: "ghitest",
+            milestone: "2",
+            labels: ["feature", "critical", "bug", "confirmed" ]
         }
     ]
 end
@@ -26,6 +37,11 @@ def milestones
         {
             title: "Milestone Title",
             des: "Milestone Discreption",
+            due: "2012-04-30"
+        },
+        {
+            title: "Milestone Title 1",
+            des: "Milestone Discreption 1",
             due: "2012-04-30"
         }
     ]

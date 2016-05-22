@@ -64,4 +64,23 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(1,response_issue["milestone"]["number"],"Milestone not added to issue")
   end
 
+  def test_6_edit_issue
+      issue=get_issue 1
+      milestone=get_milestone 1
+      `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{@@repo_name}`
+      #TODO test this milestone creation too
+      `#{ghi_exec} edit 1 "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -M 2 -s open -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1")
+      response_issue=JSON.load(response.body)
+      assert_equal(issue[:title],response_issue["title"],"Title not proper")
+      assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
+      response_labels=[]
+      response_issue["labels"].each do |label|
+          response_labels<<label["name"]
+      end
+      assert_equal(issue[:labels].uniq.sort,response_labels.uniq.sort,"Labels do not match")
+      assert_equal("open",response_issue["state"],"Issue state not changed")
+      assert_equal(2,response_issue["milestone"]["number"],"Milestone not proper")
+  end
+
 end
