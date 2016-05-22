@@ -28,7 +28,8 @@ end
 def comments
     [
         "This is first test comment",
-        "This is second test comment"
+        "This is second test comment",
+        "This is thrid test comment"
     ]
 end
 

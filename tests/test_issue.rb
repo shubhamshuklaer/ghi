@@ -41,8 +41,16 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
   end
 
-  def test_4_close_issue
+  def test_4_comment_ammend
       comment=get_comment 1
+      `#{ghi_exec} comment --amend "#{comment}" 1 -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1/comments")
+      response_body=JSON.load(response.body)
+      assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
+  end
+
+  def test_5_close_issue
+      comment=get_comment 2
       `#{ghi_exec} close -m "#{comment}" 1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1")
       response_issue=JSON.load(response.body)
@@ -52,7 +60,7 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(comment,response_body[-1]["body"],"Close comment text not proper")
   end
 
-  def test_5_milestone_create
+  def test_6_milestone_create
       milestone=get_milestone
       # TODO this is not the correct command for milestone creation, though it
       # should be for make it consistent with ghi open. In current version you
@@ -67,14 +75,14 @@ class Test_issue < Test::Unit::TestCase
       # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
   end
 
-  def test_6_milestone_add
+  def test_7_milestone_add
       `#{ghi_exec} edit 1 -M 1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1")
       response_issue=JSON.load(response.body)
       assert_equal(1,response_issue["milestone"]["number"],"Milestone not added to issue")
   end
 
-  def test_7_edit_issue
+  def test_8_edit_issue
       issue=get_issue 1
       milestone=get_milestone 1
       `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{@@repo_name}`
@@ -95,7 +103,7 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(ENV['GITHUB_USER'],response_issue["assignee"]["login"],"Not assigned to proper user")
   end
 
-  def test_8_assign
+  def test_9_assign
       `#{ghi_exec} assign -d 1 -- #{@@repo_name}`
       `#{ghi_exec} assign -u "#{ENV['GITHUB_USER']}"  1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1")
