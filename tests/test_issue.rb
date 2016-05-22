@@ -6,7 +6,7 @@ require "pp"
 class Test_issue < Test::Unit::TestCase
   @@repo_name=nil
 
-  def test_1_open_issue
+  def test_00_open_issue
       @@repo_name=create_repo
       issue=get_issue
       `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -- #{@@repo_name}`
@@ -24,7 +24,7 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(issue[:labels].uniq.sort,response_labels.uniq.sort,"Labels do not match")
   end
 
-  def test_2_un_assign
+  def test_01_un_assign
       `#{ghi_exec} assign -d 1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1")
       response_issue=JSON.load(response.body)
@@ -32,7 +32,7 @@ class Test_issue < Test::Unit::TestCase
   end
 
 
-  def test_3_comment
+  def test_02_comment
       comment=get_comment
       `#{ghi_exec} comment -m "#{comment}" 1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1/comments")
@@ -41,7 +41,7 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
   end
 
-  def test_4_comment_ammend
+  def test_03_comment_ammend
       comment=get_comment 1
       `#{ghi_exec} comment --amend "#{comment}" 1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1/comments")
@@ -49,7 +49,14 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
   end
 
-  def test_5_close_issue
+  def test_04_comment_delete
+      `#{ghi_exec} comment -D 1 -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1/comments")
+      response_body=JSON.load(response.body)
+      assert_equal(0,response_body.length,"Comment not deleted")
+  end
+
+  def test_05_close_issue
       comment=get_comment 2
       `#{ghi_exec} close -m "#{comment}" 1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1")
@@ -60,7 +67,7 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(comment,response_body[-1]["body"],"Close comment text not proper")
   end
 
-  def test_6_milestone_create
+  def test_06_milestone_create
       milestone=get_milestone
       # TODO this is not the correct command for milestone creation, though it
       # should be for make it consistent with ghi open. In current version you
@@ -75,14 +82,14 @@ class Test_issue < Test::Unit::TestCase
       # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
   end
 
-  def test_7_milestone_add
+  def test_07_milestone_add
       `#{ghi_exec} edit 1 -M 1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1")
       response_issue=JSON.load(response.body)
       assert_equal(1,response_issue["milestone"]["number"],"Milestone not added to issue")
   end
 
-  def test_8_edit_issue
+  def test_08_edit_issue
       issue=get_issue 1
       milestone=get_milestone 1
       `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{@@repo_name}`
@@ -103,7 +110,7 @@ class Test_issue < Test::Unit::TestCase
       assert_equal(ENV['GITHUB_USER'],response_issue["assignee"]["login"],"Not assigned to proper user")
   end
 
-  def test_9_assign
+  def test_09_assign
       `#{ghi_exec} assign -d 1 -- #{@@repo_name}`
       `#{ghi_exec} assign -u "#{ENV['GITHUB_USER']}"  1 -- #{@@repo_name}`
       response=get("repos/#{@@repo_name}/issues/1")
