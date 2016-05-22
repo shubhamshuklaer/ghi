@@ -118,4 +118,36 @@ class Test_issue < Test::Unit::TestCase
       assert_not_equal(nil,response_issue["assignee"],"No user assigned")
       assert_equal(ENV['GITHUB_USER'],response_issue["assignee"]["login"],"Not assigned to proper user")
   end
+
+  def test_10_delete_labels
+      tmp_labels=get_issue(1)[:labels]
+      `#{ghi_exec} label 1 -d "#{tmp_labels.join(",")}" -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1")
+      response_issue=JSON.load(response.body)
+      assert_equal([],response_issue["labels"],"Labels not deleted properly")
+  end
+
+  def test_11_add_labels
+      tmp_labels=get_issue(1)[:labels]
+      `#{ghi_exec} label 1 -a "#{tmp_labels.join(",")}" -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1")
+      response_issue=JSON.load(response.body)
+      response_labels=[]
+      response_issue["labels"].each do |label|
+          response_labels<<label["name"]
+      end
+      assert_equal(tmp_labels.uniq.sort,response_labels.uniq.sort,"Labels not added properly")
+  end
+
+  def test_12_replace_labels
+      tmp_labels=get_issue[:labels]
+      `#{ghi_exec} label 1 -f "#{tmp_labels.join(",")}" -- #{@@repo_name}`
+      response=get("repos/#{@@repo_name}/issues/1")
+      response_issue=JSON.load(response.body)
+      response_labels=[]
+      response_issue["labels"].each do |label|
+          response_labels<<label["name"]
+      end
+      assert_equal(tmp_labels.uniq.sort,response_labels.uniq.sort,"Labels not added properly")
+  end
 end
