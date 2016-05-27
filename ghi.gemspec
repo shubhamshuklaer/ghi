@@ -24,4 +24,5 @@ EOF
   s.add_development_dependency 'rake'
   s.add_development_dependency 'ronn'
   s.add_development_dependency 'typhoeus'
+  s.add_development_dependency 'single_test'
 end

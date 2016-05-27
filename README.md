@@ -60,17 +60,20 @@ Once you have an idea of what you want to do, there is a section in the [wiki](h
 1. Fork this repo
 2. Do your work:
   1. Add tests if you are adding new feature or solving some problem which do
-     not have a test.
+     not have a test. If you add a new test file then keep the file name of the
+     format `somthing_test.rb`.The test file should be kept in the test folder.
+     And the test function should be of the format `test_something`.
   2. Make your changes
   3. Run `rake build`
-  4. Before running tests GITHUB\_USER and GITHUB\_PASSWORD environment variables
+  4. Before running tests `GITHUB_USER` and `GITHUB_PASSWORD` environment variables
      must be exported. It will be best to use a fake account as the tests will
      litter your original repo. Also remove the token for your original repo
-     from ~/.gitconfig or GHI\_TOKEN environment variable.
-  5. Run `rake test` to run the tests
-  6. Run `rake test TEST=tests/file_name.rb` if you want to run a particular
-     test file. Or if you wanna run a single test method use `ruby
-     -I"lib:tests" tests/file_name.rb -n method_name`
+     from `~/.gitconfig` or `GHI_TOKEN` environment variable.
+  5. Run `rake test:one_by_one` to run all the tests
+  6. Checkout [Single Test](https://github.com/grosser/single_test) for better
+     control over which test to run. Eg. `rake test:assign:un_assign` will run
+     a test function matching `/un_assign/` in file `assign_test.rb`. Or you
+     can use use `ruby -I"lib:test" test/file_name.rb -n method_name`
   7. If you don't wanna run the tests locally use travis-ci. See section below.
   3. Make sure your changes work
 3. Open a pull request!
@@ -93,7 +96,7 @@ and use a password you are not using for anything else. Also apart from
 security reasons, bugs in tests or software can mess up you original user
 account, to to be on safe side use a fake account.
 * In Travis-CI on settings page for the repo add environment variables
-GITHUB\_USER and GITHUB\_PASSWORD. Ensure that the "Display value in build log"
+`GITHUB_USER` and `GITHUB_PASSWORD`. Ensure that the "Display value in build log"
 is set to false. It is possible to add these in ".travis.yml", but don't as all
 forks as well as original repo will be using different accounts for testing, so
 it will cause problems during merge.

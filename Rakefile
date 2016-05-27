@@ -1,4 +1,4 @@
-require 'rake/testtask'
+require 'single_test/tasks'
 
 desc 'Build the standalone script'
 task :build do
@@ -54,11 +54,4 @@ task :install => [:build, :man] do
 
   FileUtils.mkdir_p "#{prefix}/share/man/man1"
   FileUtils.cp Dir["man/*.1"], "#{prefix}/share/man/man1"
-end
-
-desc 'Run unit tests'
-Rake::TestTask.new do |t|
-  t.libs << "tests"
-  t.test_files = FileList['tests/test*.rb']
-  t.verbose = true
 end
