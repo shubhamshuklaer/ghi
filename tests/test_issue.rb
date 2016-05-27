@@ -8,17 +8,7 @@ class Test_issue < Test::Unit::TestCase
 
   def test_00_open_issue
       @@repo_name=create_repo
-      issue=get_issue
-
-      `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -- #{@@repo_name}`
-
-      response_issue = get_body("repos/#{@@repo_name}/issues/1","Issue not created")
-
-      assert_equal(issue[:title],response_issue["title"],"Title not proper")
-      assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
-      assert_not_equal(nil,response_issue["assignee"],"No user assigned")
-      assert_equal(ENV['GITHUB_USER'],response_issue["assignee"]["login"],"Not assigned to proper user")
-      assert_equal(issue[:labels].uniq.sort,extract_labels(response_issue),"Labels do not match")
+      open_issue create_repo
   end
 
   def test_01_un_assign
@@ -31,14 +21,7 @@ class Test_issue < Test::Unit::TestCase
 
 
   def test_02_comment
-      comment=get_comment
-
-      `#{ghi_exec} comment -m "#{comment}" 1 -- #{@@repo_name}`
-
-      response_body=get_body("repos/#{@@repo_name}/issues/1/comments","Issue does not exist")
-
-      assert_equal(1,response_body.length,"Comment not created")
-      assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
+      comment_issue @@repo_name
   end
 
   def test_03_comment_ammend
@@ -75,19 +58,7 @@ class Test_issue < Test::Unit::TestCase
   end
 
   def test_06_milestone_create
-      milestone=get_milestone
-
-      # TODO this is not the correct command for milestone creation, though it
-      # should be for make it consistent with ghi open. In current version you
-      # pass both title and description as argument of -m
-      `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{@@repo_name}`
-
-      response_issue=get_body("repos/#{@@repo_name}/milestones/1","Milestone not created")
-
-      assert_equal(milestone[:title],response_issue["title"],"Title not proper")
-      assert_equal(milestone[:des],response_issue["description"],"Descreption not proper")
-      # TODO test due date due_on format is 2012-04-30T00:00:00Z
-      # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
+      create_milestone @@repo_name
   end
 
   def test_07_milestone_add
@@ -162,23 +133,5 @@ class Test_issue < Test::Unit::TestCase
       response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
       assert_equal(tmp_labels.uniq.sort,extract_labels(response_issue),"Labels not replaced properly")
-  end
-
-  def test_13_show
-      issue=get_issue 1
-      milestone=get_milestone 1
-      comment=get_comment 2
-
-      show_output = `#{ghi_exec} show 1 -- #{@@repo_name}`
-
-      assert_match(/\A#1: #{issue[:title]}\n/,show_output,"Title not proper")
-      assert_match(/^@#{ENV["GITHUB_USER"]} opened this issue/,show_output,"Opening user not proper")
-      assert_match(/^@#{ENV["GITHUB_USER"]} is assigned/,show_output,"Assigned user not proper")
-      issue[:labels].each do |label|
-          assert_match(/[#{label}]/,show_output,"#{label} label not present")
-      end
-      assert_match(/Milestone #2: #{milestone[:title]}/,show_output,"Milestone not proper")
-      assert_match(/@#{ENV["GITHUB_USER"]} commented/,show_output,"Comment creator not proper")
-      assert_match(/#{comment}/,show_output,"Comment not proper")
   end
 end

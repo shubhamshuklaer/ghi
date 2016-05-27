@@ -115,3 +115,48 @@ def get_body path, err_msg=""
     assert_equal(200,response.code,err_msg)
     JSON.load(response.body)
 end
+
+def comment_issue repo_name, issue_no=1, index=0
+    comment=get_comment index
+
+    `#{ghi_exec} comment -m "#{comment}" #{issue_no} -- #{repo_name}`
+
+    response_body=get_body("repos/#{repo_name}/issues/#{issue_no}/comments","Issue does not exist")
+
+    assert_operator(1,:<=,response_body.length,"No comments exist")
+    assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
+end
+
+def create_milestone repo_name, index=0
+    milestone=get_milestone index
+
+    # TODO this is not the correct command for milestone creation, though it
+    # should be for make it consistent with ghi open. In current version you
+    # pass both title and description as argument of -m
+    `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{repo_name}`
+
+    response_issue=get_body("repos/#{repo_name}/milestones/1","Milestone not created")
+
+    assert_equal(milestone[:title],response_issue["title"],"Title not proper")
+    assert_equal(milestone[:des],response_issue["description"],"Descreption not proper")
+    # TODO test due date due_on format is 2012-04-30T00:00:00Z
+    # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
+end
+
+def open_issue repo_name, index=0
+    issue=get_issue index
+
+    create_milestone repo_name
+
+    `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -M "#{issue[:milestone]} -- #{repo_name}`
+
+    response_issue = get_body("repos/#{repo_name}/issues/1","Issue not created")
+
+    assert_equal(issue[:title],response_issue["title"],"Title not proper")
+    assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
+    assert_not_equal(nil,response_issue["assignee"],"No user assigned")
+    assert_equal(ENV['GITHUB_USER'],response_issue["assignee"]["login"],"Not assigned to proper user")
+    assert_equal(issue[:labels].uniq.sort,extract_labels(response_issue),"Labels do not match")
+    assert_not_equal(nil,response_issue["milestone"],"Milestone not added to issue")
+    assert_equal(1,response_issue["milestone"]["number"],"Milestone not proper")
+end
