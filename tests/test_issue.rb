@@ -12,10 +12,8 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue = get_body("repos/#{@@repo_name}/issues/1","Issue not created")
 
-      assert_equal(200,response.code,"Issue not created")
       assert_equal(issue[:title],response_issue["title"],"Title not proper")
       assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
       assert_not_equal(nil,response_issue["assignee"],"No user assigned")
@@ -26,10 +24,8 @@ class Test_issue < Test::Unit::TestCase
   def test_01_un_assign
       `#{ghi_exec} assign -d 1 -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue = get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(nil,response_issue["assignee"],"User not unassigned")
   end
 
@@ -39,10 +35,8 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} comment -m "#{comment}" 1 -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1/comments")
-      response_body=JSON.load(response.body)
+      response_body=get_body("repos/#{@@repo_name}/issues/1/comments","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(1,response_body.length,"Comment not created")
       assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
   end
@@ -52,10 +46,8 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} comment --amend "#{comment}" 1 -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1/comments")
-      response_body=JSON.load(response.body)
+      response_body=get_body("repos/#{@@repo_name}/issues/1/comments","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(1,response_body.length,"Comment does not exist")
       assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
   end
@@ -63,10 +55,8 @@ class Test_issue < Test::Unit::TestCase
   def test_04_comment_delete
       `#{ghi_exec} comment -D 1 -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1/comments")
-      response_body=JSON.load(response.body)
+      response_body=get_body("repos/#{@@repo_name}/issues/1/comments","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(0,response_body.length,"Comment not deleted")
   end
 
@@ -75,13 +65,12 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} close -m "#{comment}" 1 -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal("closed",response_issue["state"],"Issue not closed")
-      response=get("repos/#{@@repo_name}/issues/1/comments")
-      response_body=JSON.load(response.body)
+
+      response_body=get_body("repos/#{@@repo_name}/issues/1/comments","Issue does not exist")
+
       assert_equal(comment,response_body[-1]["body"],"Close comment text not proper")
   end
 
@@ -93,10 +82,8 @@ class Test_issue < Test::Unit::TestCase
       # pass both title and description as argument of -m
       `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/milestones/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/milestones/1","Milestone not created")
 
-      assert_equal(200,response.code,"Milestone not created")
       assert_equal(milestone[:title],response_issue["title"],"Title not proper")
       assert_equal(milestone[:des],response_issue["description"],"Descreption not proper")
       # TODO test due date due_on format is 2012-04-30T00:00:00Z
@@ -106,10 +93,8 @@ class Test_issue < Test::Unit::TestCase
   def test_07_milestone_add
       `#{ghi_exec} edit 1 -M 1 -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(1,response_issue["milestone"]["number"],"Milestone not added to issue")
   end
 
@@ -119,17 +104,12 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/milestones/2")
-      response_issue=JSON.load(response.body)
-
-      assert_equal(200,response.code,"Milestone 2 not created")
+      response_issue=get_body("repos/#{@@repo_name}/milestones/2","Milestone 2 not created")
 
       `#{ghi_exec} edit 1 "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -M 2 -s open -u "#{ENV['GITHUB_USER']}" -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(issue[:title],response_issue["title"],"Title not proper")
       assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
       assert_equal(issue[:labels].uniq.sort,extract_labels(response_issue),"Labels do not match")
@@ -141,18 +121,15 @@ class Test_issue < Test::Unit::TestCase
 
   def test_09_assign
       `#{ghi_exec} assign -d 1 -- #{@@repo_name}`
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
 
-      assert_equal(200,response.code,"Issue does not exist")
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
+
       assert_equal(nil,response_issue["assignee"],"user not un-assigned")
 
       `#{ghi_exec} assign -u "#{ENV['GITHUB_USER']}"  1 -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_not_equal(nil,response_issue["assignee"],"No user assigned")
       assert_equal(ENV['GITHUB_USER'],response_issue["assignee"]["login"],"Not assigned to proper user")
   end
@@ -162,10 +139,8 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} label 1 -d "#{tmp_labels.join(",")}" -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal([],response_issue["labels"],"Labels not deleted properly")
   end
 
@@ -174,10 +149,8 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} label 1 -a "#{tmp_labels.join(",")}" -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(tmp_labels.uniq.sort,extract_labels(response_issue),"Labels not added properly")
   end
 
@@ -186,10 +159,8 @@ class Test_issue < Test::Unit::TestCase
 
       `#{ghi_exec} label 1 -f "#{tmp_labels.join(",")}" -- #{@@repo_name}`
 
-      response=get("repos/#{@@repo_name}/issues/1")
-      response_issue=JSON.load(response.body)
+      response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
-      assert_equal(200,response.code,"Issue does not exist")
       assert_equal(tmp_labels.uniq.sort,extract_labels(response_issue),"Labels not replaced properly")
   end
 end

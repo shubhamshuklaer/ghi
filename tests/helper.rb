@@ -4,6 +4,7 @@ require "shellwords"
 require "pp"
 require "securerandom"
 require "mock_data"
+require "test/unit"
 
 def append_token headers
     headers.merge(:Authorization=>"token #{get_token}")
@@ -88,4 +89,10 @@ def extract_labels response_issue
         tmp_labels<<label["name"]
     end
     tmp_labels.uniq.sort
+end
+
+def get_body path, err_msg=""
+    response=get(path)
+    assert_equal(200,response.code,err_msg)
+    JSON.load(response.body)
 end
