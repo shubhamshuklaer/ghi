@@ -145,7 +145,7 @@ class Test_issue < Test::Unit::TestCase
   end
 
   def test_11_add_labels
-      tmp_labels=get_issue(1)[:labels]
+      tmp_labels=get_issue[:labels]
 
       `#{ghi_exec} label 1 -a "#{tmp_labels.join(",")}" -- #{@@repo_name}`
 
@@ -155,12 +155,30 @@ class Test_issue < Test::Unit::TestCase
   end
 
   def test_12_replace_labels
-      tmp_labels=get_issue[:labels]
+      tmp_labels=get_issue(1)[:labels]
 
       `#{ghi_exec} label 1 -f "#{tmp_labels.join(",")}" -- #{@@repo_name}`
 
       response_issue=get_body("repos/#{@@repo_name}/issues/1","Issue does not exist")
 
       assert_equal(tmp_labels.uniq.sort,extract_labels(response_issue),"Labels not replaced properly")
+  end
+
+  def test_13_show
+      issue=get_issue 1
+      milestone=get_milestone 1
+      comment=get_comment 2
+
+      show_output = `#{ghi_exec} show 1 -- #{@@repo_name}`
+
+      assert_match(/\A#1: #{issue[:title]}\n/,show_output,"Title not proper")
+      assert_match(/^@#{ENV["GITHUB_USER"]} opened this issue/,show_output,"Opening user not proper")
+      assert_match(/^@#{ENV["GITHUB_USER"]} is assigned/,show_output,"Assigned user not proper")
+      issue[:labels].each do |label|
+          assert_match(/[#{label}]/,show_output,"#{label} label not present")
+      end
+      assert_match(/Milestone #2: #{milestone[:title]}/,show_output,"Milestone not proper")
+      assert_match(/@#{ENV["GITHUB_USER"]} commented/,show_output,"Comment creator not proper")
+      assert_match(/#{comment}/,show_output,"Comment not proper")
   end
 end
