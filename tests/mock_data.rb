@@ -8,7 +8,7 @@ not working. I don't know what's wrong. The os is ubuntu 16.04.
 EOF
 
             assign: "ghitest",
-            milestone: "1",
+            milestone: 1,
             labels: ["help-wanted", "wontfix", "bug" ]
         },
         {
@@ -19,7 +19,7 @@ confirmed bug and a feature request at the same time.
 EOF
 
             assign: "ghitest",
-            milestone: "2",
+            milestone: 2,
             labels: ["feature", "critical", "bug", "confirmed" ]
         }
     ]

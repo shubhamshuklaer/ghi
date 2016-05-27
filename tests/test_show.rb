@@ -1,6 +1,5 @@
 require "test/unit"
 require "helper"
-require "json"
 require "pp"
 
 class Test_show < Test::Unit::TestCase
@@ -10,7 +9,6 @@ class Test_show < Test::Unit::TestCase
         milestone=get_milestone
         comment=get_comment
 
-        open_issue repo_name
         comment_issue repo_name
 
         show_output = `#{ghi_exec} show 1 -- #{repo_name}`
@@ -21,7 +19,7 @@ class Test_show < Test::Unit::TestCase
         issue[:labels].each do |label|
             assert_match(/[#{label}]/,show_output,"#{label} label not present")
         end
-        assert_match(/Milestone #2: #{milestone[:title]}/,show_output,"Milestone not proper")
+        assert_match(/Milestone #1: #{milestone[:title]}/,show_output,"Milestone not proper")
         assert_match(/@#{ENV["GITHUB_USER"]} commented/,show_output,"Comment creator not proper")
         assert_match(/#{comment}/,show_output,"Comment not proper")
     end

@@ -117,6 +117,7 @@ def get_body path, err_msg=""
 end
 
 def comment_issue repo_name, issue_no=1, index=0
+    open_issue repo_name
     comment=get_comment index
 
     `#{ghi_exec} comment -m "#{comment}" #{issue_no} -- #{repo_name}`
@@ -127,7 +128,7 @@ def comment_issue repo_name, issue_no=1, index=0
     assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
 end
 
-def create_milestone repo_name, index=0
+def create_milestone repo_name, index=0, milestone_no=1
     milestone=get_milestone index
 
     # TODO this is not the correct command for milestone creation, though it
@@ -135,7 +136,7 @@ def create_milestone repo_name, index=0
     # pass both title and description as argument of -m
     `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{repo_name}`
 
-    response_issue=get_body("repos/#{repo_name}/milestones/1","Milestone not created")
+    response_issue=get_body("repos/#{repo_name}/milestones/#{milestone_no}","Milestone not created")
 
     assert_equal(milestone[:title],response_issue["title"],"Title not proper")
     assert_equal(milestone[:des],response_issue["description"],"Descreption not proper")
@@ -143,14 +144,14 @@ def create_milestone repo_name, index=0
     # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
 end
 
-def open_issue repo_name, index=0
+def open_issue repo_name, index=0, issue_no=1
     issue=get_issue index
 
-    create_milestone repo_name
+    create_milestone repo_name, (issue[:milestone] - 1), issue_no
 
-    `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -M "#{issue[:milestone]} -- #{repo_name}`
+    `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -M "#{issue[:milestone]}" -- #{repo_name}`
 
-    response_issue = get_body("repos/#{repo_name}/issues/1","Issue not created")
+    response_issue = get_body("repos/#{repo_name}/issues/#{issue_no}","Issue not created")
 
     assert_equal(issue[:title],response_issue["title"],"Title not proper")
     assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
