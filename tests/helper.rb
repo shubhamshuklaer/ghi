@@ -6,6 +6,8 @@ require "securerandom"
 require "mock_data"
 require "test/unit"
 
+$token_gen_done=false
+
 def append_token headers
     headers.merge(:Authorization=>"token #{get_token}")
 end
@@ -53,7 +55,24 @@ def get_attr index, attr
     Shellwords.escape(issues[index][attr])
 end
 
+def gen_token
+    if not $token_gen_done
+        `#{ghi_exec} config --auth --quiet`
+
+        # This needs to be before the head request as that call uses get_token
+        # which will again trigger `#{ghi_exec} config --auth --quiet` since
+        # token_gen_done will still be false. And hence go into an infinite
+        # loop.
+        $token_gen_done=true
+
+        response=head("users/#{ENV['GITHUB_USER']}")
+
+        assert_equal('public_repo, repo',response.headers["X-OAuth-Scopes"])
+    end
+end
+
 def get_token
+    gen_token
     token=`git config --global ghi.token`
     assert_not_equal("",token,"Token not present in ~/.gitconfig")
     token.chop
