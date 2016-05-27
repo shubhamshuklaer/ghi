@@ -72,10 +72,13 @@ def gen_token
 end
 
 def get_token
-    gen_token
-    token=`git config --global ghi.token`
+    token=`git config --global ghi.token`.chop
+    if token == ""
+        gen_token
+    end
+    token=`git config --global ghi.token`.chop
     assert_not_equal("",token,"Token not present in ~/.gitconfig")
-    token.chop
+    token
 end
 
 def create_repo
