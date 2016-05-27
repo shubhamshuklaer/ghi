@@ -81,3 +81,11 @@ end
 def get_milestone index=0
     milestones[index]
 end
+
+def extract_labels response_issue
+    tmp_labels=[]
+    response_issue["labels"].each do |label|
+        tmp_labels<<label["name"]
+    end
+    tmp_labels.uniq.sort
+end
