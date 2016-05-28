@@ -5,6 +5,7 @@ require "pp"
 require "securerandom"
 require "mock_data"
 require "test/unit"
+require "date"
 
 $token_gen_done=false
 
@@ -151,8 +152,7 @@ def create_milestone repo_name, index=0
 
     assert_equal(milestone[:title],response_milestone["title"],"Title not proper")
     assert_equal(milestone[:des],response_milestone["description"],"Descreption not proper")
-    # TODO test due date due_on format is 2012-04-30T00:00:00Z
-    # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
+    assert_equal(Date.parse(milestone[:due]),Date.parse(response_milestone["due_on"]),"Due date not proper")
 end
 
 def open_issue repo_name, index=0
