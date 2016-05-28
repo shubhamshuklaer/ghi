@@ -59,27 +59,8 @@ Once you have an idea of what you want to do, there is a section in the [wiki](h
 
 1. Fork this repo
 2. Do your work:
-  1. Add tests if you are adding new feature or solving some problem which do
-     not have a test. If you add a new test file then keep the file name of the
-     format `somthing_test.rb`.The test file should be kept in the test folder.
-     And the test function should be of the format `test_something`.
-  2. Make your changes
-  3. Run `rake build`
-  4. Before running tests `GITHUB_USER` and `GITHUB_PASSWORD` environment variables
-     must be exported. It will be best to use a fake account as the tests will
-     litter your original repo. Also remove the token for your original repo
-     from `~/.gitconfig` or `GHI_TOKEN` environment variable.
-  5. Run `rake test:one_by_one` to run all the tests
-  6. Checkout [Single Test](https://github.com/grosser/single_test) for better
-     control over which test to run. Eg. `rake test:assign:un_assign` will run
-     a test function matching `/un_assign/` in file `assign_test.rb`. One more
-     eg. `rake test:edit test:assign` will runt tests `edit_test.rb` and
-     `assign_test.rb`. Or you can use use `ruby -I"lib:test" test/file_name.rb
-     -n method_name`
-  7. By default the repo created while testing will be deleted. But if you want
-     to see the repo then add `NO_DELETE=` to the command. For eg. `rake
-     test:assign NO_DELETE=`. The `=` is important.
-  7. If you don't wanna run the tests locally use travis-ci. See section below.
+  1. Make your changes
+  2. Run `rake build`
   3. Make sure your changes work
 3. Open a pull request!
 
@@ -91,17 +72,40 @@ FAQs can be found in the [wiki](https://github.com/stephencelis/ghi/wiki/FAQ)
 
 ![Example](images/example.png)
 
+## Testing Guidlines
+* You are encouraged to add tests if you are adding new feature or solving some
+problem which do not have a test.
+* A test file should be named as `something_test.rb` and should be kept in the
+`test` folder.
+* Before running tests `GITHUB_USER` and `GITHUB_PASSWORD` environment
+variables must be exported. It is best to use a fake account as a bug can mess
+up your original account. Also remove the token for your original account from
+`~/.gitconfig` or `GHI_TOKEN` environment variable.
+* Run `rake test:one_by_one` to run all the tests
+* Check [Single Test](https://github.com/grosser/single_test) for better
+control over which test to run. Eg. `rake test:assign:un_assign` will run a
+test function matching `/un_assign/` in file `assign_test.rb`. One more eg.
+`rake test:edit test:assign` will run tests `edit_test.rb` and
+`assign_test.rb`. Or you can also use `ruby -I"lib:test" test/file_name.rb -n
+method_name`
+* By default, the repo created while testing will be deleted. But if you want
+to see the state of repo after the test has run then add `NO_DELETE=` to the
+command. For eg. `rake test:assign NO_DELETE=` . The `=` is important.
+* If you don't wanna run the tests locally use travis-ci. See section below.
+
 ## Enable Travis CI in fork
 
 * Open a Travis CI account and activate travis-ci for the fork
 * Create a fake github account for testing. The username, password and token
-will be available to the tests and if by mistake(or otherwise) the test prints
-it, it will be available in public log. So its best to create a fake account
-and use a password you are not using for anything else. Also apart from
-security reasons, bugs in tests or software can mess up you original user
-account, to to be on safe side use a fake account.
-* In Travis-CI on settings page for the repo add environment variables
-`GITHUB_USER` and `GITHUB_PASSWORD`. Ensure that the "Display value in build log"
-is set to false. It is possible to add these in ".travis.yml", but don't as all
-forks as well as original repo will be using different accounts for testing, so
-it will cause problems during merge.
+will be available to the tests and if by mistake the test prints it, it will be
+available in public log. So its best to create a fake account and use a
+password you are not using for anything else. Apart from security reasons,
+bugs in tests or software can also mess up your original account, so to be
+on safe side use a fake account.
+* At Travis-CI, on the settings page for the fork, add environment variables
+`GITHUB_USER` and `GITHUB_PASSWORD`. Ensure that the "Display value in build
+log" is set to false. It is possible to add these in ".travis.yml", but don't
+as all forks as well as original repo will be using different accounts for
+testing, so it will cause problems during merge.
+* Note that the build status badge in the README points to the travis-ci page
+for this repo, not the fork.
