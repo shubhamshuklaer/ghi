@@ -99,11 +99,17 @@ def create_repo
 end
 
 def get_issue index=0
-    issue=issues[index]
-    issue[:des].gsub!(/\n/,"<br>")
-    # http://stackoverflow.com/questions/12700218/how-do-i-escape-a-single-quote-in-ruby
-    issue[:des].gsub!(/'/){"\\'"}
-    return issue
+    if index == -1
+        tmp_issues=issues
+    else
+        tmp_issues=[issues[index]]
+    end
+    for i in 0..(tmp_issues.length-1)
+        tmp_issues[i][:des].gsub!(/\n/,"<br>")
+        # http://stackoverflow.com/questions/12700218/how-do-i-escape-a-single-quote-in-ruby
+        tmp_issues[i][:des].gsub!(/'/){"\\'"}
+    end
+    return (index != -1)?tmp_issues[0]:tmp_issues
 end
 
 def get_comment index=0
