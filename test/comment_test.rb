@@ -8,11 +8,13 @@ class Test_comment < Test::Unit::TestCase
     end
 
     def test_comment
-        comment_issue @repo_name
+        open_issue @repo_name
+        create_comment @repo_name
     end
 
     def test_comment_amend
-        comment_issue @repo_name
+        open_issue @repo_name
+        create_comment @repo_name
 
         comment=get_comment 1
 
@@ -25,7 +27,8 @@ class Test_comment < Test::Unit::TestCase
     end
 
     def test_comment_delete
-        comment_issue @repo_name
+        open_issue @repo_name
+        create_comment @repo_name
 
         `#{ghi_exec} comment -D 1 -- #{@repo_name}`
 

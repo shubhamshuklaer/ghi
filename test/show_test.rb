@@ -12,7 +12,8 @@ class Test_show < Test::Unit::TestCase
         milestone=get_milestone
         comment=get_comment
 
-        comment_issue @repo_name
+        open_issue @repo_name
+        create_comment @repo_name
 
         show_output = `#{ghi_exec} show 1 -- #{@repo_name}`
 

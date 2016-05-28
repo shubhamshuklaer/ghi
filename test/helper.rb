@@ -134,8 +134,7 @@ def get_body path, err_msg=""
     JSON.load(response.body)
 end
 
-def comment_issue repo_name, issue_no=1, index=0
-    open_issue repo_name
+def create_comment repo_name, issue_no=1, index=0
     comment=get_comment index
 
     `#{ghi_exec} comment -m "#{comment}" #{issue_no} -- #{repo_name}`
