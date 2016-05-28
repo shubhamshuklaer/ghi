@@ -131,30 +131,35 @@ def comment_issue repo_name, issue_no=1, index=0
     assert_equal(comment,response_body[-1]["body"],"Comment text not proper")
 end
 
-def create_milestone repo_name, index=0, milestone_no=1
+def create_milestone repo_name, index=0
     milestone=get_milestone index
 
-    # TODO this is not the correct command for milestone creation, though it
-    # should be for make it consistent with ghi open. In current version you
-    # pass both title and description as argument of -m
     `#{ghi_exec} milestone "#{milestone[:title]}" -m "#{milestone[:des]}" --due "#{milestone[:due]}"  -- #{repo_name}`
 
-    response_issue=get_body("repos/#{repo_name}/milestones/#{milestone_no}","Milestone not created")
+    response_milestones=get_body("repos/#{repo_name}/milestones","Repo #{repo_name} does not exist")
 
-    assert_equal(milestone[:title],response_issue["title"],"Title not proper")
-    assert_equal(milestone[:des],response_issue["description"],"Descreption not proper")
+    assert_operator(1,:<=,response_milestones.length,"No milestone exist")
+    response_milestone=response_milestones[-1]
+
+    assert_equal(milestone[:title],response_milestone["title"],"Title not proper")
+    assert_equal(milestone[:des],response_milestone["description"],"Descreption not proper")
     # TODO test due date due_on format is 2012-04-30T00:00:00Z
     # assert_equal(milestone[:due],response_issue["due_on"],"Due date not proper")
 end
 
-def open_issue repo_name, index=0, issue_no=1
+def open_issue repo_name, index=0
     issue=get_issue index
+    milestone_index = issue[:milestone]-1
+    milestone_title = get_milestone(milestone_index)[:title]
 
-    create_milestone repo_name, (issue[:milestone] - 1), issue_no
+    create_milestone repo_name, milestone_index
 
     `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -M "#{issue[:milestone]}" -- #{repo_name}`
 
-    response_issue = get_body("repos/#{repo_name}/issues/#{issue_no}","Issue not created")
+    response_issues = get_body("repos/#{repo_name}/issues","Repo #{repo_name} does not exist")
+
+    assert_operator(1,:<=,response_issues.length,"No issues exist")
+    response_issue = response_issues[-1]
 
     assert_equal(issue[:title],response_issue["title"],"Title not proper")
     assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
@@ -162,5 +167,6 @@ def open_issue repo_name, index=0, issue_no=1
     assert_equal(ENV['GITHUB_USER'],response_issue["assignee"]["login"],"Not assigned to proper user")
     assert_equal(issue[:labels].uniq.sort,extract_labels(response_issue),"Labels do not match")
     assert_not_equal(nil,response_issue["milestone"],"Milestone not added to issue")
-    assert_equal(1,response_issue["milestone"]["number"],"Milestone not proper")
+    # Milestone title is unique
+    assert_equal(milestone_title,response_issue["milestone"]["title"],"Milestone not proper")
 end

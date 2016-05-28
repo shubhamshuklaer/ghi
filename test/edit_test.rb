@@ -9,7 +9,7 @@ class Test_edit < Test::Unit::TestCase
 
       issue=get_issue 1
 
-      create_milestone repo_name, 1, 2
+      create_milestone repo_name, 1
 
       `#{ghi_exec} edit 1 "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -M 2 -s open -u "#{ENV['GITHUB_USER']}" -- #{repo_name}`
 

@@ -3,10 +3,10 @@ require "helper"
 require "pp"
 
 class Test_assign < Test::Unit::TestCase
-    def un_assign repo_name
-        `#{ghi_exec} assign -d 1 -- #{repo_name}`
+    def un_assign repo_name, issue_no=1
+        `#{ghi_exec} assign -d #{issue_no} -- #{repo_name}`
 
-        response_issue = get_body("repos/#{repo_name}/issues/1","Issue does not exist")
+        response_issue = get_body("repos/#{repo_name}/issues/#{issue_no}","Issue does not exist")
 
         assert_equal(nil,response_issue["assignee"],"User not unassigned")
     end
