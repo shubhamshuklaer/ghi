@@ -3,15 +3,18 @@ require "helper"
 require "pp"
 
 class Test_show < Test::Unit::TestCase
+    def setup
+        @repo_name=create_repo
+    end
+
     def test_show
-        repo_name=create_repo
         issue=get_issue
         milestone=get_milestone
         comment=get_comment
 
-        comment_issue repo_name
+        comment_issue @repo_name
 
-        show_output = `#{ghi_exec} show 1 -- #{repo_name}`
+        show_output = `#{ghi_exec} show 1 -- #{@repo_name}`
 
         assert_match(/\A#1: #{issue[:title]}\n/,show_output,"Title not proper")
         assert_match(/^@#{ENV["GITHUB_USER"]} opened this issue/,show_output,"Opening user not proper")
@@ -22,5 +25,9 @@ class Test_show < Test::Unit::TestCase
         assert_match(/Milestone #1: #{milestone[:title]}/,show_output,"Milestone not proper")
         assert_match(/@#{ENV["GITHUB_USER"]} commented/,show_output,"Comment creator not proper")
         assert_match(/#{comment}/,show_output,"Comment not proper")
+    end
+
+    def teardown
+        delete_repo(@repo_name)
     end
 end

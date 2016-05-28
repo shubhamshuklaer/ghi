@@ -76,6 +76,9 @@ Once you have an idea of what you want to do, there is a section in the [wiki](h
      eg. `rake test:edit test:assign` will runt tests `edit_test.rb` and
      `assign_test.rb`. Or you can use use `ruby -I"lib:test" test/file_name.rb
      -n method_name`
+  7. By default the repo created while testing will be deleted. But if you want
+     to see the repo then add `NO_DELETE=` to the command. For eg. `rake
+     test:assign NO_DELETE=`. The `=` is important.
   7. If you don't wanna run the tests locally use travis-ci. See section below.
   3. Make sure your changes work
 3. Open a pull request!

@@ -16,7 +16,7 @@ def get_url path
     "https://api.github.com/#{path}"
 end
 
-def request path, method, options={}
+def request path, method, options={}, use_basic_auth=false
     if options[:params].nil?
         options.merge!(:params=>{})
     end
@@ -31,7 +31,9 @@ def request path, method, options={}
         method: method,
         body: JSON.dump(options[:body]),
         params: options[:params],
-        headers: append_token(options[:headers])
+        username: (if use_basic_auth then ENV["GITHUB_USER"] else nil end),
+        password: (if use_basic_auth then ENV["GITHUB_PASSWORD"] else nil end),
+        headers: (if use_basic_auth then options[:headers] else append_token(options[:headers]) end)
     ).run
 end
 
@@ -45,6 +47,12 @@ end
 
 def post path, options ={}
     request(path,:post,options)
+end
+
+def delete_repo repo_name
+    if not ENV["NO_DELETE"]
+        request("repos/#{repo_name}",:delete,{},true)
+    end
 end
 
 def ghi_exec
