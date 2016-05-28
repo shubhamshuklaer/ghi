@@ -160,14 +160,25 @@ def open_issue repo_name, index=0
     milestone_index = issue[:milestone]-1
     milestone_title = get_milestone(milestone_index)[:title]
 
-    create_milestone repo_name, milestone_index
+    milestone_exist=false
+    response_milestones=get_body("repos/#{repo_name}/milestones","Repo #{repo_name} does not exist")
+    response_milestones.each do |tmp_milestone|
+        if milestone_title == tmp_milestone["title"]
+            milestone_exist=true
+            break
+        end
+    end
+
+    if not milestone_exist
+        create_milestone repo_name, milestone_index
+    end
 
     `#{ghi_exec} open "#{issue[:title]}" -m "#{issue[:des]}" -L "#{issue[:labels].join(",")}" -u "#{ENV['GITHUB_USER']}" -M "#{issue[:milestone]}" -- #{repo_name}`
 
     response_issues = get_body("repos/#{repo_name}/issues","Repo #{repo_name} does not exist")
 
     assert_operator(1,:<=,response_issues.length,"No issues exist")
-    response_issue = response_issues[-1]
+    response_issue = response_issues[0]
 
     assert_equal(issue[:title],response_issue["title"],"Title not proper")
     assert_equal(issue[:des],response_issue["body"],"Descreption not proper")
