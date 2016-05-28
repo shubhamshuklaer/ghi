@@ -72,8 +72,10 @@ Once you have an idea of what you want to do, there is a section in the [wiki](h
   5. Run `rake test:one_by_one` to run all the tests
   6. Checkout [Single Test](https://github.com/grosser/single_test) for better
      control over which test to run. Eg. `rake test:assign:un_assign` will run
-     a test function matching `/un_assign/` in file `assign_test.rb`. Or you
-     can use use `ruby -I"lib:test" test/file_name.rb -n method_name`
+     a test function matching `/un_assign/` in file `assign_test.rb`. One more
+     eg. `rake test:edit test:assign` will runt tests `edit_test.rb` and
+     `assign_test.rb`. Or you can use use `ruby -I"lib:test" test/file_name.rb
+     -n method_name`
   7. If you don't wanna run the tests locally use travis-ci. See section below.
   3. Make sure your changes work
 3. Open a pull request!
