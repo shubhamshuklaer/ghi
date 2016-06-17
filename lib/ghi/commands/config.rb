@@ -10,9 +10,8 @@ EOF
           opts.on '--local', 'set for local repo only' do
             assigns[:local] = true
           end
-          opts.separator ''
-          opts.on '--quiet', 'Suppress gitconfig modified message' do
-            assigns[:quiet] = true
+          opts.on '--just_print_token', "Just print the token don't add it to ~/.gitconfig(Useful while testing)" do
+            assigns[:just_print_token] = true
           end
           opts.on '--auth [<username>]' do |username|
             self.action = 'auth'
@@ -31,7 +30,7 @@ EOF
         if action == 'auth'
           assigns[:password] = Authorization.password || get_password
           Authorization.authorize!(
-            assigns[:username], assigns[:password], assigns[:local], assigns[:quiet]
+            assigns[:username], assigns[:password], assigns[:local], assigns[:just_print_token]
           )
         end
       end

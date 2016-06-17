@@ -7,17 +7,15 @@ require "mock_data"
 require "test/unit"
 require "date"
 
-$token_gen_done=false
-
 def append_token headers
-    headers.merge(:Authorization=>"token #{get_token}")
+    headers.merge(:Authorization=>"token #{ENV["GHI_TOKEN"]}")
 end
 
 def get_url path
     "https://api.github.com/#{path}"
 end
 
-def request path, method, options={}, use_basic_auth=false
+def request path, method, options={}, use_basic_auth=true
     if options[:params].nil?
         options.merge!(:params=>{})
     end
@@ -50,9 +48,13 @@ def post path, options ={}
     request(path,:post,options)
 end
 
+def delete path, options ={}
+    request(path,:delete,options)
+end
+
 def delete_repo repo_name
     if not ENV["NO_DELETE"]
-        request("repos/#{repo_name}",:delete,{},true)
+        delete("repos/#{repo_name}")
     end
 end
 
@@ -65,29 +67,16 @@ def get_attr index, attr
 end
 
 def gen_token
-    if not $token_gen_done
-        `#{ghi_exec} config --auth --quiet`
+    ENV["GHI_TOKEN"]=`#{ghi_exec} config --auth --just_print_token`.chop
+    response=request("users/#{ENV['GITHUB_USER']}",:head,{},false)
 
-        # This needs to be before the head request as that call uses get_token
-        # which will again trigger `#{ghi_exec} config --auth --quiet` since
-        # token_gen_done will still be false. And hence go into an infinite
-        # loop.
-        $token_gen_done=true
-
-        response=head("users/#{ENV['GITHUB_USER']}")
-
-        assert_equal('public_repo, repo',response.headers["X-OAuth-Scopes"])
-    end
+    assert_equal('public_repo, repo',response.headers["X-OAuth-Scopes"])
 end
 
-def get_token
-    token=`git config --global ghi.token`.chop
-    if token == ""
-        gen_token
-    end
-    token=`git config --global ghi.token`.chop
-    assert_not_equal("",token,"Token not present in ~/.gitconfig")
-    token
+def delete_token
+    token_info=get_body("authorizations","Impossible api error").detect {|token| token["token_last_eight"] == ENV["GHI_TOKEN"][-8..-1]}
+    assert_not_equal(nil,token_info,"Token with hash: #{ENV["GHI_TOKEN"]} does not exist")
+    delete("authorizations/#{token_info["id"]}")
 end
 
 def create_repo

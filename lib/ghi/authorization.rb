@@ -15,7 +15,7 @@ module GHI
         @token = GHI.config 'ghi.token'
       end
 
-      def authorize! user = username, pass = password, local = true, quiet = false
+      def authorize! user = username, pass = password, local = true, just_print_token = false
         return false unless user && pass
         code ||= nil # 2fa
         args = code ? [] : [54, "✔\r"]
@@ -36,11 +36,15 @@ module GHI
         }
         @token = res.body['token']
 
-        unless username
-          system "git config#{' --global' unless local} github.user #{user}"
-        end
+        if just_print_token
+            puts token
+        else
+            unless username
+                system "git config#{' --global' unless local} github.user #{user}"
+            end
 
-        store_token! user, token, local, quiet
+            store_token! user, token, local
+        end
       rescue Client::Error => e
         if e.response['X-GitHub-OTP'] =~ /required/
           puts "Bad code." if code
@@ -78,7 +82,7 @@ EOF
 
       private
 
-      def store_token! username, token, local, quiet
+      def store_token! username, token, local
         if security
           run  = []
 
@@ -97,7 +101,7 @@ EOF
         command = "git config#{' --global' unless local} ghi.token #{token}"
         system command
 
-        unless local || quiet
+        unless local
           at_exit do
             warn <<EOF
 Your ~/.gitconfig has been modified by way of:

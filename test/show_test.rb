@@ -4,6 +4,7 @@ require "pp"
 
 class Test_show < Test::Unit::TestCase
     def setup
+	    gen_token
         @repo_name=create_repo
     end
 
@@ -35,5 +36,6 @@ class Test_show < Test::Unit::TestCase
 
     def teardown
         delete_repo(@repo_name)
+        delete_token
     end
 end
