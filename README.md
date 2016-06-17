@@ -76,13 +76,14 @@ FAQs can be found in the [wiki](https://github.com/stephencelis/ghi/wiki/FAQ)
 * You are encouraged to add tests if you are adding new feature or solving some
 problem which do not have a test.
 * A test file should be named as `something_test.rb` and should be kept in the
-`test` folder.
+`test` folder. A test class should be named `Test_something` and a test 
+function `test_something`. Helper functions must not start with `test`.
 * Before running tests `GITHUB_USER` and `GITHUB_PASSWORD` environment
 variables must be exported. It is best to use a fake account as a bug can mess
-up your original account. You can either export the 2 environment variables(As
-ghi only uses these while generating its token so after you generate
-your token for original account for regular use, you can export the
-fake account detailes) or you can pass it on command line, eg. `rake
+up your original account. You can either export these 2 environment variables 
+through `~/.bashrc`(As ghi only uses these while generating its token, so after
+you generate the token for your original account(for regular use), fake account
+details can be exported) or you can pass it on command line, eg. `rake
 test:one_by_one GITHUB_USER='abc' GITHUB_PASSWORD='xyz'`.
 * Run `rake test:one_by_one` to run all the tests
 * Check [Single Test](https://github.com/grosser/single_test) for better
@@ -109,7 +110,8 @@ on safe side use a fake account.
 * At Travis-CI, on the settings page for the fork, add environment variables
 `GITHUB_USER` and `GITHUB_PASSWORD`. Ensure that the "Display value in build
 log" is set to false. It is possible to add these in ".travis.yml", but don't
-as all forks as well as original repo will be using different accounts for
+as all forks as well as original repo will be using different accounts(We cannot 
+provide the details of a common account for testing because of security reasons) for
 testing, so it will cause problems during merge.
 * Note that the build status badge in the README points to the travis-ci page
 for this repo, not the fork.
