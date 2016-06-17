@@ -79,8 +79,11 @@ problem which do not have a test.
 `test` folder.
 * Before running tests `GITHUB_USER` and `GITHUB_PASSWORD` environment
 variables must be exported. It is best to use a fake account as a bug can mess
-up your original account. Also remove the token for your original account from
-`~/.gitconfig` or `GHI_TOKEN` environment variable.
+up your original account. You can either export the 2 environment variables(As
+ghi only uses these while generating its token so after you generate
+your token for original account for regular use, you can export the
+fake account detailes) or you can pass it on command line like `rake
+test:one_by_one GITHUB_USER='abc' GITHUB_PASSWORD='xyz'`.
 * Run `rake test:one_by_one` to run all the tests
 * Check [Single Test](https://github.com/grosser/single_test) for better
 control over which test to run. Eg. `rake test:assign:un_assign` will run a
