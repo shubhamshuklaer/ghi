@@ -82,7 +82,7 @@ variables must be exported. It is best to use a fake account as a bug can mess
 up your original account. You can either export the 2 environment variables(As
 ghi only uses these while generating its token so after you generate
 your token for original account for regular use, you can export the
-fake account detailes) or you can pass it on command line like `rake
+fake account detailes) or you can pass it on command line, eg. `rake
 test:one_by_one GITHUB_USER='abc' GITHUB_PASSWORD='xyz'`.
 * Run `rake test:one_by_one` to run all the tests
 * Check [Single Test](https://github.com/grosser/single_test) for better
@@ -91,9 +91,10 @@ test function matching `/un_assign/` in file `assign_test.rb`. One more eg.
 `rake test:edit test:assign` will run tests `edit_test.rb` and
 `assign_test.rb`. Or you can also use `ruby -I"lib:test" test/file_name.rb -n
 method_name`
-* By default, the repo created while testing will be deleted. But if you want
-to see the state of repo after the test has run then add `NO_DELETE=` to the
-command. For eg. `rake test:assign NO_DELETE=` . The `=` is important.
+* By default, the repo and token created while testing will be deleted. But if
+you want to see the state of repo and tokens after the test has run, then add
+`NO_DELETE_REPO=1` and `NO_DELETE_TOKEN=1` to the command. For eg. `rake
+test:assign NO_DELETE_REPO=1 NO_DELETE_TOKEN=1`.
 * If you don't wanna run the tests locally use travis-ci. See section below.
 
 ## Enable Travis CI in fork

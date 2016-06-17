@@ -53,7 +53,7 @@ def delete path, options ={}
 end
 
 def delete_repo repo_name
-    if not ENV["NO_DELETE"]
+    unless ENV["NO_DELETE_REPO"]=="1"
         delete("repos/#{repo_name}")
     end
 end
@@ -74,9 +74,11 @@ def gen_token
 end
 
 def delete_token
-    token_info=get_body("authorizations","Impossible api error").detect {|token| token["token_last_eight"] == ENV["GHI_TOKEN"][-8..-1]}
-    assert_not_equal(nil,token_info,"Token with hash: #{ENV["GHI_TOKEN"]} does not exist")
-    delete("authorizations/#{token_info["id"]}")
+    unless ENV["NO_DELETE_TOKEN"]=="1"
+        token_info=get_body("authorizations","Impossible api error").detect {|token| token["token_last_eight"] == ENV["GHI_TOKEN"][-8..-1]}
+        assert_not_equal(nil,token_info,"Token with hash: #{ENV["GHI_TOKEN"]} does not exist")
+        delete("authorizations/#{token_info["id"]}")
+    end
 end
 
 def create_repo
